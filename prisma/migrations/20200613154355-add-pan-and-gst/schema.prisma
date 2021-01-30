@@ -1,0 +1,187 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = "***"
+}
+
+model authentication_provider {
+  created_at    DateTime @default(now())
+  data          Json
+  id            Int      @default(autoincrement()) @id
+  provider_key  String
+  provider_type String
+  updated_at    DateTime @default(now())
+  user_id       Int
+  user          user     @relation(fields: [user_id], references: [id])
+}
+
+model class_session {
+  course_id          Int
+  created_at         DateTime             @default(now())
+  end_time           DateTime
+  id                 Int                  @default(autoincrement()) @id
+  meeting_link       String?
+  start_time         DateTime
+  summary            String
+  topic              String
+  updated_at         DateTime             @default(now())
+  course             course               @relation(fields: [course_id], references: [id])
+  student_attendance student_attendance[]
+}
+
+model course {
+  academy             String?
+  age_max             Int             @default(18)
+  age_min             Int             @default(3)
+  cover               String?
+  created_at          DateTime        @default(now())
+  duration            Int             @default(40)
+  format              String
+  id                  Int             @default(autoincrement()) @id
+  level               String          @default("all")
+  objective           String?
+  outcampus_course_id String?
+  price               Int             @default(1)
+  size_max            Int             @default(20)
+  size_min            Int             @default(1)
+  status              String          @default("unapproved")
+  subject_id          Int
+  summary             String
+  teacher_id          Int
+  title               String
+  updated_at          DateTime        @default(now())
+  subject             subject         @relation(fields: [subject_id], references: [id])
+  user                user            @relation(fields: [teacher_id], references: [id])
+  class_session       class_session[]
+  enrolment           enrolment[]
+}
+
+model enrolment {
+  course_id   Int
+  id          Int           @default(autoincrement()) @id
+  rating      Int?
+  status      String        @default("PENDING")
+  student_id  Int
+  course      course        @relation(fields: [course_id], references: [id])
+  user        user          @relation(fields: [student_id], references: [id])
+  transaction transaction[]
+
+  @@unique([course_id, student_id], name: "course_user_course_id_student_id_key")
+}
+
+model message {
+  body              String
+  created_at        DateTime            @default(now())
+  id                Int                 @default(autoincrement()) @id
+  sender_id         Int
+  subject           String?
+  updated_at        DateTime            @default(now())
+  user              user                @relation(fields: [sender_id], references: [id])
+  message_recipient message_recipient[]
+}
+
+model message_recipient {
+  created_at DateTime @default(now())
+  id         Int      @default(autoincrement()) @id
+  message_id Int
+  read       Boolean  @default(false)
+  updated_at DateTime @default(now())
+  user_id    Int
+  message    message  @relation(fields: [message_id], references: [id])
+  user       user     @relation(fields: [user_id], references: [id])
+}
+
+model payout {
+  created_at      DateTime @default(now())
+  id              Int      @default(autoincrement()) @id
+  payout_request  Json
+  payout_response Json
+  updated_at      DateTime @default(now())
+}
+
+model profile {
+  address    Json?
+  bio        String?
+  city       String?
+  created_at DateTime  @default(now())
+  dob        DateTime?
+  documents  Json?
+  GST        String?
+  id         Int       @default(autoincrement()) @id
+  pan        String?   @unique
+  pincode    Int?
+  state      String?
+  updated_at DateTime  @default(now())
+  user_id    Int       @unique
+  user       user      @relation(fields: [user_id], references: [id])
+}
+
+model role {
+  created_at DateTime @default(now())
+  id         Int      @default(autoincrement()) @id
+  name       String   @unique
+  updated_at DateTime @default(now())
+  user       user[]
+}
+
+model student_attendance {
+  class_id      Int
+  created_at    DateTime      @default(now())
+  id            Int           @default(autoincrement()) @id
+  rating        Json
+  updated_at    DateTime      @default(now())
+  user_id       Int
+  class_session class_session @relation(fields: [class_id], references: [id])
+  user          user          @relation(fields: [user_id], references: [id])
+}
+
+model subject {
+  created_at DateTime @default(now())
+  id         Int      @default(autoincrement()) @id
+  name       String   @unique
+  updated_at DateTime @default(now())
+  course     course[]
+}
+
+model transaction {
+  created_at    DateTime  @default(now())
+  enrollment_id Int
+  id            Int       @default(autoincrement()) @id
+  order_id      String    @unique
+  pg_link       String?
+  pg_request    Json?
+  pg_response   Json?
+  status        String    @default("PENDING")
+  updated_at    DateTime  @default(now())
+  enrolment     enrolment @relation(fields: [enrollment_id], references: [id])
+}
+
+model user {
+  avatar                  String?
+  created_at              DateTime                  @default(now())
+  dob                     String?
+  email                   String?                   @unique
+  email_verification_code String?                   @default(dbgenerated())
+  email_verified          Boolean                   @default(false)
+  first_name              String?
+  id                      Int                       @default(autoincrement()) @id
+  last_name               String?
+  outcampus_id            String?                   @unique
+  password_hash           String?
+  phone                   String?                   @unique
+  phone_otp               Int?
+  phone_verified          Boolean                   @default(false)
+  role_id                 Int
+  updated_at              DateTime                  @default(now())
+  role                    role                      @relation(fields: [role_id], references: [id])
+  authentication_provider authentication_provider[]
+  course                  course[]
+  enrolment               enrolment[]
+  message                 message[]
+  message_recipient       message_recipient[]
+  profile                 profile?
+  student_attendance      student_attendance[]
+}

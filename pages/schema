@@ -1,0 +1,51 @@
+Sign up
+  - Phone verification with OTP
+  - email
+  - password
+
+Verify email - No done
+
+Login
+  - If email not verified (show annoying banner on the top to verify and not allow to create(or enroll for) a  course)
+  - If teacher, redirect to dashboard. Show course listing
+
+Events
+  - class start
+  - class end (to trigger the rating)
+
+Roles
+  - Super admin
+  - admin
+  - teacher
+  - student
+  - guest/not-logged-in user
+
+- Add claim to firebase auth JWT 
+
+
+DB Schema and relations
+
+user
+  - id
+
+course
+  - id
+  - user.id
+
+course-user
+  - course.id
+  - user.id
+
+class
+  - id
+  - user.id
+  - course.id
+  - title(inherit from course title)
+  - start_date
+  - end_date
+
+class-user
+  - class.id
+  - user.id
+  - attendance
+  - rating

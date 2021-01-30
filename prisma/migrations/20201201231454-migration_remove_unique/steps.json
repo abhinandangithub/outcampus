@@ -1,0 +1,25 @@
+{
+  "version": "0.3.14-fixed",
+  "steps": [
+    {
+      "tag": "DeleteDirective",
+      "location": {
+        "path": {
+          "tag": "Model",
+          "model": "enrolment",
+          "arguments": [
+            {
+              "name": "",
+              "value": "[course_id, student_id]"
+            },
+            {
+              "name": "name",
+              "value": "\"course_user_course_id_student_id_key\""
+            }
+          ]
+        },
+        "directive": "unique"
+      }
+    }
+  ]
+}

@@ -1,0 +1,317 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = "***"
+}
+
+model authentication_provider {
+  created_at    DateTime @default(now())
+  data          Json
+  id            Int      @default(autoincrement()) @id
+  provider_key  String
+  provider_type String
+  updated_at    DateTime @default(now())
+  user_id       Int
+  user          user     @relation(fields: [user_id], references: [id])
+}
+
+model class_session {
+  course_id          Int
+  created_at         DateTime             @default(now())
+  end_time           DateTime
+  id                 Int                  @default(autoincrement()) @id
+  meeting_link       String?
+  session_link       String?              @default("")
+  start_time         DateTime
+  summary            String
+  topic              String
+  updated_at         DateTime             @default(now())
+  course             course               @relation(fields: [course_id], references: [id])
+  student_attendance student_attendance[]
+  teacher_rating     teacher_rating[]
+  student_rating     student_rating[]
+  home_work          home_work[]
+}
+
+model course {
+  academy             String?
+  age_max             Int             @default(18)
+  age_min             Int             @default(3)
+  cover               String?
+  created_at          DateTime        @default(now())
+  duration            Int             @default(40)
+  format              String
+  hasGST              Boolean         @default(true)
+  id                  Int             @default(autoincrement()) @id
+  level               String          @default("all")
+  objective           String?
+  outcampus_course_id String?
+  price               Int             @default(1)
+  size_max            Int             @default(20)
+  size_min            Int             @default(1)
+  status              String          @default("unapproved")
+  subject_id          Int
+  summary             String
+  teacher_id          Int
+  title               String
+  updated_at          DateTime        @default(now())
+  subject             subject         @relation(fields: [subject_id], references: [id])
+  user                user            @relation(fields: [teacher_id], references: [id])
+  class_session       class_session[]
+  enrolment           enrolment[]
+}
+
+model enrolment {
+  course_id   Int
+  id          Int           @default(autoincrement()) @id
+  rating      Int?
+  status      String        @default("PENDING")
+  student_id  Int
+  course      course        @relation(fields: [course_id], references: [id])
+  user        user          @relation(fields: [student_id], references: [id])
+  transaction transaction[]
+  amountPaid  Int           @default(0)
+  
+}
+
+model forgot_password {
+  token   String @default(dbgenerated()) @id
+  user_id Int
+  user    user   @relation(fields: [user_id], references: [id])
+}
+
+model message {
+  body              String
+  created_at        DateTime            @default(now())
+  id                Int                 @default(autoincrement()) @id
+  sender_id         Int
+  subject           String?
+  updated_at        DateTime            @default(now())
+  user              user                @relation(fields: [sender_id], references: [id])
+  message_recipient message_recipient[]
+}
+
+model message_recipient {
+  created_at DateTime @default(now())
+  id         Int      @default(autoincrement()) @id
+  message_id Int
+  read       Boolean  @default(false)
+  updated_at DateTime @default(now())
+  user_id    Int
+  message    message  @relation(fields: [message_id], references: [id])
+  user       user     @relation(fields: [user_id], references: [id])
+}
+
+model payout {
+  created_at      DateTime @default(now())
+  id              Int      @default(autoincrement()) @id
+  payout_request  Json
+  payout_response Json
+  updated_at      DateTime @default(now())
+}
+
+model profile {
+  address    Json?
+  bio        String?
+  city       String?
+  created_at DateTime  @default(now())
+  dob        DateTime?
+  documents  Json?
+  GST        String?
+  id         Int       @default(autoincrement()) @id
+  pan        String?   @unique
+  pincode    Int?
+  state      String?
+  country    String?
+  updated_at DateTime  @default(now())
+  user_id    Int       @unique
+  user       user      @relation(fields: [user_id], references: [id])
+}
+
+model role {
+  created_at DateTime @default(now())
+  id         Int      @default(autoincrement()) @id
+  name       String   @unique
+  updated_at DateTime @default(now())
+  user       user[]
+}
+
+model student_attendance {
+  class_id      Int
+  created_at    DateTime      @default(now())
+  id            Int           @default(autoincrement()) @id
+  rating        Json
+  updated_at    DateTime      @default(now())
+  user_id       Int
+  class_session class_session @relation(fields: [class_id], references: [id])
+  user          user          @relation(fields: [user_id], references: [id])
+}
+
+model subject {
+  created_at DateTime @default(now())
+  id         Int      @default(autoincrement()) @id
+  name       String   @unique
+  updated_at DateTime @default(now())
+  course     course[]
+}
+
+model transaction {
+  created_at    DateTime  @default(now())
+  enrollment_id Int
+  id            Int       @default(autoincrement()) @id
+  order_id      String    @unique
+  pg_link       String?
+  pg_request    Json?
+  pg_response   Json?
+  status        String    @default("PENDING")
+  updated_at    DateTime  @default(now())
+  enrolment     enrolment @relation(fields: [enrollment_id], references: [id])
+}
+
+model user {
+  avatar                  String?
+  created_at              DateTime                  @default(now())
+  dob                     String?
+  email                   String?                   @unique
+  email_verification_code String?                   @default(dbgenerated())
+  email_verified          Boolean                   @default(false)
+  first_name              String?
+  id                      Int                       @default(autoincrement()) @id
+  last_name               String?
+  outcampus_id            String?                   @unique
+  password_hash           String?
+  phone                   String?                   @unique
+  phone_otp               Int?
+  phone_verified          Boolean                   @default(false)
+  role_id                 Int
+  updated_at              DateTime                  @default(now())
+  role                    role                      @relation(fields: [role_id], references: [id])
+  authentication_provider authentication_provider[]
+  course                  course[]
+  enrolment               enrolment[]
+  forgot_password         forgot_password[]
+  message                 message[]
+  message_recipient       message_recipient[]
+  profile                 profile?
+  student_attendance      student_attendance[]
+  teacher_rating          teacher_rating[]
+  student_rating          student_rating[]
+}
+
+model callback_request {
+  id    Int     @default(autoincrement()) @id
+  phone String?
+}
+
+model teacher_rating {
+  id               Int           @default(autoincrement()) @id
+  class_session_id Int
+  user_id          Int
+  overall          Int
+  audio            Int
+  video            Int
+  content          Int
+  course_structure Int
+  professionalism  Int
+  communication    Int
+  comment          String
+  class_session    class_session @relation(fields: [class_session_id], references: [id])
+  user             user          @relation(fields: [user_id], references: [id])
+}
+
+model student_rating {
+  id               Int           @default(autoincrement()) @id
+  class_session_id Int
+  user_id          Int
+  student_id       Int
+  performance      Int
+  participation    Int
+  remark           String
+  student          user          @relation(fields: [student_id], references: [id])
+  class_session    class_session @relation(fields: [class_session_id], references: [id])
+}
+
+model register {
+  created_at              DateTime                  @default(now())
+  parent_email            String?                   @unique
+  parent_name             String?
+  id                      Int                       @default(autoincrement()) @id
+  child_name              String?
+  phone                   String?                   @unique
+  age_group               String?
+  course_name             String?
+  trial_date               DateTime
+}
+
+model teacher_email {
+  id                      Int                       @default(autoincrement()) @id
+  email                   String?                   @unique
+}
+
+model free_trial_date {
+  id Int @default(autoincrement()) @id
+  created_at              DateTime                  @default(now())
+  updated_at              DateTime                  @default(now())
+  date                    DateTime
+  free_trial_slot free_trial_slot[]
+}
+
+model free_trial_slot {
+  id Int @default(autoincrement()) @id
+  startTime               String
+  created_at              DateTime                  @default(now())
+  updated_at              DateTime                  @default(now())
+  free_trial_date_id      Int
+  free_trial_date         free_trial_date          @relation(fields: [free_trial_date_id], references: [id])
+}
+
+model discount_coupon {
+  id Int @default(autoincrement()) @id
+  code                    String                    @unique
+  startTime               DateTime                  @default(now())
+  endTime                 DateTime                  @default(now())
+  created_at              DateTime                  @default(now())
+  isActive                Boolean                   @default(true)
+  value                   Int
+  user_id                 Int                       @default(0)
+}
+
+model payment {
+  id Int @default(autoincrement()) @id
+  created_at              DateTime                  @default(now())
+  status                  String                    
+  order_id                String
+  course_id               Int                       @default(0)      
+  user_id                 Int
+  razorpay_payment_id     String
+  razorpay_order_id       String
+  razorpay_signature      String
+  amount                  Int                       @default(0)  
+  discount_amount         Int                       @default(0)  
+}
+
+model home_work {
+  id                 Int                  @default(autoincrement()) @id
+  created_at         DateTime             @default(now())
+  url                String
+  user_id            Int  
+  course_id          Int          
+  class_session_id   Int
+  isTeacher          Boolean              @default(true)
+  class_session      class_session        @relation(fields: [class_session_id], references: [id])
+  user               user                 @relation(fields: [user_id], references: [id])
+}
+
+model email_notification {
+  id Int @default(autoincrement()) @id
+  to                      String
+  from                    String
+  subject                 String
+  text                    String
+  trial_date              DateTime                  @default(now())
+  created_at              DateTime                  @default(now())
+  email_sent              Boolean                   @default(false)
+}
